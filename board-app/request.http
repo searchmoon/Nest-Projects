@@ -1,0 +1,3 @@
+### Get all List
+
+GET http://localhost:3000/boards

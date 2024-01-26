@@ -5,8 +5,23 @@ GET http://localhost:3000/boards
 ### Create a new board
 
 POST http://localhost:3000/boards
+Content-Type: application/json; charset=UTF-8
 
 {
   "title": "메롱",
   "description": "안녕하세요"
 }
+
+### Delete a board (by id)
+
+DELETE http://localhost:3000/boards
+
+### Update board status 
+
+PATCH  http://localhost:3000/boards/유효한id값/status
+Content-Type: application/json; charset=UTF-8
+
+{
+  "status": "PUBLIC"
+}
+

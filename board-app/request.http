@@ -2,14 +2,18 @@
 
 GET http://localhost:3000/boards
 
+### Get List by id
+
+GET http://localhost:3000/boards/2
+
 ### Create a new board
 
 POST http://localhost:3000/boards
 Content-Type: application/json; charset=UTF-8
 
 {
-  "title": "메롱",
-  "description": "안녕하세요"
+  "title": "제목",
+  "description": "안녕하세요22"
 }
 
 ### Delete a board (by id)

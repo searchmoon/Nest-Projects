@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   Param,
+  ParseIntPipe,
   Patch,
   Post,
   UseGuards,
@@ -27,6 +28,10 @@ export class BoardsController {
   // getAllBoard(): Board[] {
   //   return this.boardsService.getAllBoards();
   // }
+  @Get()
+  getAllBoard(@GetUser() user: User): Promise<Board[]> {
+    return this.boardsService.getAllBoards(user);
+  }
   // @Post()
   // @UsePipes(ValidationPipe)
   // createBoard(@Body() createBoardDto: CreateBoardDto): Board {
@@ -54,6 +59,10 @@ export class BoardsController {
   // deleteBoard(@Param('id') id: string): void {
   //   return this.boardsService.deleteBoard(id);
   // }
+  @Delete('/:id')
+  deleteBoard(@Param('id', ParseIntPipe) id, @GetUser() user: User): void {
+    return this.boardsService.deleteBoard(id, user);
+  }
   // @Patch('/:id/status')
   // updateBoardStatus(
   //   @Param('id') id: string,

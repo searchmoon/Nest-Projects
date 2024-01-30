@@ -1,3 +1,4 @@
+### <BOARD>
 ### Get all List
 
 GET http://localhost:3000/boards
@@ -29,3 +30,15 @@ Content-Type: application/json; charset=UTF-8
   "status": "PUBLIC"
 }
 
+////////////////////////////////////////////////////////////////
+
+### AUTH
+
+### Create a new user
+POST http://localhost:3000/auth/signup
+Content-Type: application/json; charset=UTF-8
+
+{
+  "username": "루미",
+  "password": "1212",
+}

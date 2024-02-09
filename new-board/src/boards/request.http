@@ -1,0 +1,17 @@
+### get all boards list
+GET http://localhost:3000/boards
+
+### get board by id
+GET http://localhost:3000/boards/20
+
+### create a new board
+POST http://localhost:3000/boards
+Content-Type: application/json
+
+{
+  "title": "board 4",
+  "content": "board 4 입니다"
+}
+
+### delete a board by id
+Delete http://localhost:3000/boards/22

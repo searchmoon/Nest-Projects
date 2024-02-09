@@ -1,7 +1,9 @@
+import { Boards } from 'src/boards/boards.entity';
 import {
   BaseEntity,
   Column,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
   Unique,
 } from 'typeorm';
@@ -17,4 +19,7 @@ export class Users extends BaseEntity {
 
   @Column()
   password: string;
+
+  @OneToMany(() => Boards, (boards) => boards.users, { eager: true })
+  boards: Boards[];
 }

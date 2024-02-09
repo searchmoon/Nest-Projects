@@ -1,17 +1,23 @@
 ### create a new user
 POST http://localhost:3000/users/signup
-Content-Type: application/json
+Content-Type: application/json; charset=UTF-8
 
 {
-  "email": "22rumi@gmail.com",
+  "email": "32rumi@gmail.com",
   "password": "123456"
 }
 
 ### sign in user
-GET http://localhost:3000/users/signin
-Content-Type: application/json
+POST http://localhost:3000/users/signin
+Content-Type: application/json; charset=UTF-8
 
 {
-  "email": "22rumi@gmail.com",
+  "email": "33rumi@gmail.com",
   "password": "123456"
 }
+
+### test user 객체
+POST http://localhost:3000/users/test
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6IjMzcnVtaUBnbWFpbC5jb20iLCJpYXQiOjE3MDc0ODcwOTcsImV4cCI6MTcwNzQ5MDY5N30.4vlM6nm5s5izO8X1wptdCvr4qc6EFvAo87yAUU69QOo
+Content-Type: application/json; charset=UTF-8
+

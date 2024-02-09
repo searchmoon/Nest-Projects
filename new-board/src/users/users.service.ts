@@ -2,24 +2,28 @@ import {
   ConflictException,
   Injectable,
   InternalServerErrorException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Users } from './users.entity';
 import { UserAuthDto } from './dtos/user-auth.dto';
 import * as bcrypt from 'bcryptjs';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(Users) private userRepository: Repository<Users>,
+    private jwtService: JwtService,
   ) {}
 
-  async signUp(userInfo: UserAuthDto) {
+  async signUp(userInfo: UserAuthDto): Promise<void> {
     const { email, password } = userInfo;
 
     const salt = await bcrypt.genSalt();
     const hashedPassword = await bcrypt.hash(password, salt);
+    console.log(hashedPassword);
 
     const user = await this.userRepository.create({
       email,
@@ -37,8 +41,18 @@ export class UsersService {
     }
   }
 
-  async signIn(userInfo: UserAuthDto) {
+  async signIn(userInfo: UserAuthDto): Promise<{ accessToken: string }> {
+    const { email, password } = userInfo;
+    const user = await this.userRepository.findOne({ where: { email } });
+    console.log('user', user);
 
-    // await this.userRepository.
+    if (user && (await bcrypt.compare(password, user.password))) {
+      const payload = { email };
+      const accessToken = await this.jwtService.sign(payload);
+
+      return { accessToken };
+    } else {
+      throw new UnauthorizedException('login failed');
+    }
   }
 }

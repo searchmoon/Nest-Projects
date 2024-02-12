@@ -1,12 +1,17 @@
+
+
 ### get all boards list
 GET http://localhost:3000/boards
+Authorization: Bearer {{authToken}}
 
 ### get board by id
-GET http://localhost:3000/boards/15
+GET http://localhost:3000/boards/22
+Authorization: Bearer {{authToken}}
 
 ### create a new board
 POST http://localhost:3000/boards
 Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6IjMzcnVtaUBnbWFpbC5jb20iLCJpYXQiOjE3MDc1NDk2MzgsImV4cCI6MTcwNzU1MzIzOH0.v2DNEfkSKY_6iv1BcxdzZlEhx6YKMRjnIFjzd7A_Azk
 
 {
   "title": "board 6",
@@ -15,3 +20,6 @@ Content-Type: application/json
 
 ### delete a board by id
 Delete http://localhost:3000/boards/111
+Authorization: Bearer {{authToken}}
+
+

@@ -36,8 +36,8 @@ export class BoardsController {
 
   @Post()
   @UsePipes(ValidationPipe)
-  createBoard(@Body() body: CreateBoardDto, @GetUser() users: Users) {
-    return this.boardsService.createBoard(body, users);
+  createBoard(@Body() body: CreateBoardDto, @GetUser() user: Users) {
+    return this.boardsService.createBoard(body, user);
   }
 
   @Delete('/:id')

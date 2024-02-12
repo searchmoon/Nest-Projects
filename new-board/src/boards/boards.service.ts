@@ -33,12 +33,13 @@ export class BoardsService {
     return board;
   }
 
-  createBoard(boardDto: CreateBoardDto, users: Users) {
+  async createBoard(boardDto: CreateBoardDto, user: Users): Promise<Boards> {
     const board = this.boardsRepository.create(boardDto);
     board.status = BoardStatus.PUBLIC;
-    board.users = users;
-
-    return this.boardsRepository.save(board);
+    board.user = user;
+    console.log(board);
+    await this.boardsRepository.save(board);
+    return board;
   }
 
   async deleteBoard(id: number) {

@@ -1,4 +1,5 @@
 import { NestFactory } from '@nestjs/core';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 
 declare const module: any;
@@ -6,6 +7,16 @@ declare const module: any;
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const port = process.env.PORT || 3000;
+
+  const config = new DocumentBuilder()
+    .setTitle('Chat Api')
+    .setDescription('Chat 기능 개발을 위한 문서입니다.')
+    .setVersion('1.0')
+    .addTag('chat-api')
+    .build();
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api', app, document);
+
   await app.listen(port);
   console.log(`listening on port ${port}`);
 

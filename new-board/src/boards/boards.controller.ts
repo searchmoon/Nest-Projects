@@ -17,10 +17,11 @@ import { GetUser } from 'src/users/get-user.decorator';
 import { Users } from 'src/users/users.entity';
 import { BoardStatus } from './boards-status.enum';
 import { Boards } from './boards.entity';
-import { AuthGuard } from '@nestjs/passport';
+// import { AuthGuard } from '@nestjs/passport';
+import { JwtAuthGuard } from '../guards/jwt.auth.guard';
 
 @Controller('boards')
-@UseGuards(AuthGuard())
+@UseGuards(JwtAuthGuard)
 export class BoardsController {
   constructor(private boardsService: BoardsService) {}
 

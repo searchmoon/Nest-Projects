@@ -5,7 +5,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { Users } from './users.entity';
 import { UserAuthDto } from './dtos/user-auth.dto';
 import * as bcrypt from 'bcryptjs';
@@ -16,6 +16,7 @@ export class UsersService {
   constructor(
     @InjectRepository(Users) private userRepository: Repository<Users>,
     private jwtService: JwtService,
+    private readonly dataSource: DataSource,
   ) {}
 
   async signUp(userInfo: UserAuthDto): Promise<void> {
@@ -56,3 +57,4 @@ export class UsersService {
     }
   }
 }
+

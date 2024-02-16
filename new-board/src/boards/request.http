@@ -2,24 +2,23 @@
 
 ### get all boards list
 GET http://localhost:3000/boards
-Authorization: Bearer {{authToken}}
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6IjM0cnVtaUBnbWFpbC5jb20iLCJpYXQiOjE3MDc3ODk5MjQsImV4cCI6MTcwNzc5MzUyNH0.MyidlbxMyiLzBp6AFb_9M3ZKLN_v8Wb36vN-qNVBcRA
 
 ### get board by id
-GET http://localhost:3000/boards/22
-Authorization: Bearer {{authToken}}
+GET http://localhost:3000/boards/34
+# Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6IjM0cnVtaUBnbWFpbC5jb20iLCJpYXQiOjE3MDc3ODk5MjQsImV4cCI6MTcwNzc5MzUyNH0.MyidlbxMyiLzBp6AFb_9M3ZKLN_v8Wb36vN-qNVBcRA
 
 ### create a new board
 POST http://localhost:3000/boards
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6IjMzcnVtaUBnbWFpbC5jb20iLCJpYXQiOjE3MDc1NDk2MzgsImV4cCI6MTcwNzU1MzIzOH0.v2DNEfkSKY_6iv1BcxdzZlEhx6YKMRjnIFjzd7A_Azk
+# Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6IjM0cnVtaUBnbWFpbC5jb20iLCJpYXQiOjE3MDc3ODk5MjQsImV4cCI6MTcwNzc5MzUyNH0.MyidlbxMyiLzBp6AFb_9M3ZKLN_v8Wb36vN-qNVBcRA
 
 {
-  "title": "board 6",
-  "content": "board 6 입니다"
+  "title": "board 7",
+  "content": "board 7 입니다"
 }
 
 ### delete a board by id
-Delete http://localhost:3000/boards/111
-Authorization: Bearer {{authToken}}
-
+Delete http://localhost:3000/boards/32
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6IjM0cnVtaUBnbWFpbC5jb20iLCJpYXQiOjE3MDc3ODk5MjQsImV4cCI6MTcwNzc5MzUyNH0.MyidlbxMyiLzBp6AFb_9M3ZKLN_v8Wb36vN-qNVBcRA
 

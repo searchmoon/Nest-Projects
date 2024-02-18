@@ -420,3 +420,366 @@ export class UndefinedToNullInterceptor implements NestInterceptor {
 .pipe(map((data) => (data === undefined ? null : data)));
 
 이부분을 보면 알겠지만 이 인터셉터를 적용해준것은 return 값이 undefined 로 나오는 값은 모두 null 로 return 해준다. 
+
+
+## < TypeORM >
+
+### TypeORM-entities
+
+sequlize에서는 디비가 만들어져있다 하면 sequlize auto에서 sql 테이블, 컬럼들을 거기서 불러왔었는데, typeorm 에서는 typeorm-model-generator 를 써서 db에 있는것들을 불러온다. entities 자동생성해줌.
+
+sql 클래스들을 타입오알엠으로 한땀한땀 옮기지말고 이거 써라. typeorm-model-generator 사용방법 자세히 찾아보기
+
+> npm i typeorm-model-generator -D
+> 
+
+src 에 entities 폴더(테이블에 대응되는 개념) 만들고,
+
+이 명령어 입력해준다. 여기부터는 디비 수업들은사람만 적용!
+
+> npx typeorm-model-generator -h [localhost](http://localhost) -d 폴더이름 -u root -x 비밀번호 -e DBMS 이름
+> 
+
+이거 다시 찾아보기.
+
+output 폴더 생성되는데, 여기서 entities 폴더 src 로 옮겨줌 
+
+이 코드 그대로 쓰지 않기 때문에 따라치치 말고, github에서 entities 복사해서 넣기.
+이렇게 만들고 나서 항상 그냥 똑같이 쓰면 안되고, 체크해봐야된다.
+
+workspaces: 슬랙에 알던사람들 같은 것임
+
+mysql workbench 보기.
+
+### TypeORM 관계설정
+
+@ManyToOne이나 @OneToMany 사용할때는 @JoinColumn을 둘중에 하나 써주는거임. 한쪽에만 작성하면 됨. 
+
+여기서는 OneToMany쓰는곳이 workspaces. ManyToOne이 channels 인데, channels에다가 joinColumns 써줌 (foriegn key 가 있는 쪽에다가 joinColums 넣어주는것임. oneToMany관계라면 Many 쪽에다가 써주는거임)
+
+```jsx
+//Channels.ts 
+@ManyToOne(() => Workspaces, (workspaces) => workspaces.Channels, {
+  onDelete: 'SET NULL',
+  onUpdate: 'CASCADE',
+})
+@JoinColumn([{ name: 'WorkspaceId', referencedColumnName: 'id' }])
+Workspace: Workspaces;
+```
+
+1. @ManyToOne에 {
+  onDelete: 'SET NULL',
+  onUpdate: 'CASCADE',
+} 는 sql 옵션.
+Channels.ts 에서는 () => Workspaces, (workspaces) => workspaces.Channels,
+Workspaces.ts 에서는 () => Channels, (channels) => channels.Workspace 이렇게사용
+2. @JoinColumn: channels 에서 이 WorkspaceId 를 매개로 자동으로 join 을 해준다.
+
+*** onetomany 나 manytoone 은 joinColumns, ManyToMany 는 joinTable 써줌 (일대다, 다대다의 차이)*** 
+그래서 users, workspaces 사이에 중간테이블이 생기기때문에 joinTable써준다. 
+
+@JoinTable은 users 나 workspaces 둘중에 하나만 넣어주면 된다.(users, workspaces 는 다대다 관계이기 때문에 중간 column이 아닌 중간 table 을 생성을 해야하기 때문에 joinTable 이 필요) 어느쪽에 넣어주는지는 상관없음.
+
+Users.ts 코드인데, 코드를 보면, inverseJoinColumn에 WorkspaceId 들어있고, joinColumn 에 UserId 들어있는데, 순서 바뀌면 에러날수있다. 순서 잘 넣기.(현재 있는 파일→ joinColumn, 다른 파일에있는것 → inverseJoinColumn
+
+```jsx
+@ManyToMany(() => Workspaces, (workspaces) => workspaces.Members)
+  @JoinTable({
+    name: 'workspacemembers', //workspacemembers의 테이블 이름.
+		//WorkspaceMembers.ts에 @Entity('workspacemembers', { schema: 'sleact' })보면 테이블 이름 어떻게 썼는지 확인가능
+    joinColumn: {
+      name: 'UserId',
+      referencedColumnName: 'id',
+    },
+    inverseJoinColumn: {
+      name: 'WorkspaceId',
+      referencedColumnName: 'id',
+    },
+  })
+  Workspaces: Workspaces[];
+```
+
+- foreign key : fk가 정의된 테이블이 자식테이블임.( 1: N 관계의 경우  N에 해당하는 테이블에 외래키 생성된다)
+
+여기 entities 에서 Users랑 Workspaces 는 다대다관계. 중간테이블은 WorkspacesMembers. 
+
+ManyToMany가 버그가 날수도있다. 그러면 onetomany랑 manytoone 으로 바꿔줘서 사용하기도 한다.
+
+ Users ↔  WorkspacesMembers ↔ Workspaces
+
+one ↔ many ↔ one
+
+@JoinTable 이랑 @JoinColumn 구분하기
+
+@Entity() 데코레이터 위에 
+
+```tsx
+@Index('name', ['name'], { unique: true })
+@Index('url', ['url'], { unique: true })
+@Index('OwnerId', ['OwnerId'], {})
+@Entity({ schema: 'sleact', name: 'workspaces' })
+```
+
+이런식으로 index 넣어줄수 있다.(성능높이기 위해 사용. 속도 빠르게)
+
+@Entity({ schema: 'sleact', name: 'workspaces' })
+
+이렇게 속성{} 넣어줄수도있고, 
+
+@Entity( 'workspaces' , { schema: 'sleact'}) 이렇게 넣어줄수도있다.(위아래 같은코드)
+
+WorkspaceMembers.ts 에서
+
+```jsx
+@DeleteDateColumn()
+deletedAt: Date | null;
+```
+
+이 있는데 이것은, 데이터를 지울때, 진짜 지워주는게 아니고, deletedAt 이 Date 일때는 사용자에게 데이터를 보여주지 않고, null 일때만 보여주는 soft delete.(확실하게 지운게 아닌데 지운척 하는것. 나중에 복원할것을 대비해서) 아예 row를 확실하게 지운것은 hard delete
+
+ManyToOne, OneToMany 할때, 세번째 인자에 cascade: [’update’] 라는 옵션을 넣어줄수 있는데, 
+
+한번에 두개의 테이블을 동시 수정할때 이 옵션을 넣어줘야 동시수정이 가능하다.
+
+하나의 테이블은 업데이트 됐는데, 나머지 테이블은 업데이트가 안되는 경우도 있다. 그럴때 저 옵션을 넣어줘야함. update 말고도 다른 속성도 찾아보기.
+
+이렇게 entity까지 설정하고 나서 erd [cloud.com](http://cloud.com) 사이트에서 DDL 을 가지고 테이블 구조를 볼수 있다. ( SQL → SQL 생성기 누르면 테이블 구조를 쿼리로 쫙 뽑아줌.
+
+webstorm은 ddl 지원. vscode도 변환 툴 있나 보기.( 가져오기에 그쿼리문을 다 넣어주면됨.) 이런식으로 테이블의 관계를 볼수 있다. 관계를 쉽게 파악 가능. 일대다: 삼지창쪽이 다 관계
+
+![Untitled](https://prod-files-secure.s3.us-west-2.amazonaws.com/b08e7419-4fd5-4a8b-9478-184d8f32f525/32d34343-b905-4947-aa4b-9089eaef2e5a/Untitled.png)
+
+### TypeORM 커넥션 맺기
+
+typeorm 공식문서 https://docs.nestjs.com/cli/usages → https://docs.nestjs.com/recipes/crud-generator
+
+여기에서 
+
+| resource | res | Generate a new CRUD resource. See the https://docs.nestjs.com/recipes/crud-generator for more details. (TS only) |
+| --- | --- | --- |
+
+이부분 보면, 
+
+> nest g resource <name>
+> 
+
+하면 기본 crud 기능 다 만들어준다. (module, controller, service 따로 만들어주던거 한번에 만드는 기능) name 에는 폴더명(테이블명) 적기
+
+이 세가지 설치해준다.
+
+> npm install --save @nestjs/typeorm typeorm mysql2
+> 
+
+설치하고 나서
+
+app.module.ts 에서 TypeOrmModule 설정객체 넣어준다.그리고, synchronize: true인거 
+
+처음에 db 만들때는 true로 해주지만 한번 생성되고 나서는 계속 false 로 해주자. 위험하니깐.실제 데이터 날아갈수 있으니깐.
+
+```tsx
+TypeOrmModule.forRoot({
+  type: 'mysql',
+  host: 'localhost',
+  port: 3306,
+  username: process.env.DB_USERNAME,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_DATABASE,
+  autoLoadEntities: true,
+  entities: [
+    ChannelChats,
+    ChannelMembers,
+    Channels,
+    DMs,
+    Mentions,
+    Users,
+    WorkspaceMembers,
+    Workspaces,
+  ],
+  keepConnectionAlive: true,
+  migrations: [__dirname + '/migrations/*.ts'],
+  charset: 'utf8mb4_general_ci',
+  synchronize: true,
+  logging: true,
+}),
+```
+
+entity들은 entities: [’entities/*.ts’] 나, autoLoadEntities: true로 불러올수도 있지만 버그가 생길때가 있어서 직접 넣어주었다.
+
+ormconfig.ts 를 만들지 않고
+
+logging: true,
+keepConnectionAlive: true,
+
+를 추가해주기.keepConnectionAlive는 핫리로딩(서버에서 글자하나 바꾸면 재시작 해주는것)할때  db 연결을 끊어버리기 대문에 true 로 해준다.
+
+- typeorm도 로우쿼리를 날릴 수 있나? 날릴 수 있다. 이런식으로 해준다.  공식문서에 createQueryBuilder 를 사용하는 방식도 있다.(repository import 해서 .createQueryBuilder() 해주는 방식.
+
+![Untitled](https://prod-files-secure.s3.us-west-2.amazonaws.com/b08e7419-4fd5-4a8b-9478-184d8f32f525/3757d802-2479-4b4d-878a-22b40544e0a3/Untitled.png)
+
+sleact 이름 나중에 바꾸기. 데이터베이스 이름 entities 안에있는것들은 테이블 이름. 그것을 포함하는 데이터베이스 이름.
+
+데이터베이스: chat 으로 하기. 데이터베이스 만들고, 테이블 추가.
+
+### TypeORM seeding, migration
+
+- Seeding:
+
+초기 데이터 만들기: 원래 typeorm-seeding 이었는데, typeorm-extension 으로 바뀌었다.
+
+설치해준다.
+
+> npm i typeorm-extension
+> 
+
+밑에 코드 package.json 에 scripts에 추가해준다.
+
+db 생성, 삭제, 테이블 생성, 삭제, 마이그레이션등 명령어
+
+```jsx
+"db:create": "ts-node ./node_modules/typeorm-extension/bin/cli.cjs db:create -d ./dataSource.ts", //db 생성
+"db:drop": "ts-node ./node_modules/typeorm-extension/bin/cli.cjs db:drop -d ./dataSource.ts", //db drop
+"seed": "ts-node ./node_modules/typeorm-extension/bin/cli.cjs seed -d ./dataSource.ts", //데이터 넣는 명령어
+"schema:drop": "ts-node ./node_modules/typeorm/cli.js schema:drop", //테이블 drop
+"schema:sync": "ts-node ./node_modules/typeorm/cli.js schema:sync", //테이블 생성 
+"db:migrate": "npm run typeorm migration:run -- -d ./dataSource.ts",
+"db:migrate:revert": "npm run typeorm migration:revert -- -d ./dataSource.ts",
+"db:create-migration": "npm run typeorm migration:create -- ./src/migrations/",
+"db:generate-migration": "npm run typeorm migration:generate -- ./src/migrations -d ./dataSource.ts"
+```
+
+테이블 넣는 명령어: typeorm config 에서 synchronize: true로 바꿔주고 서버를 시작하면 테이블이 자동으로 생긴다. 그러고 나서 다시 false 로 꼭 바꿔주기
+
+npm run db:create 해주고 나면 에러뜬다. The database options could not be located/loaded."라는 오류가 발생했는데, 데이터베이스 옵션을 찾을 수 없거나 로드할 수 없다는 의미.
+
+typeOrm  extension 은 app.module.ts 의 TypeOrmModule.forRoot({}) 의 설정파일을 못읽는다. 그래서 
+
+dataSource.ts 추가해줘야함.TypeOrmModule.forRoot({})  에 설정해준거랑 똑같이 넣어주었다. 
+
+명령어 넣어준것중에 몇몇에 -d ./dataSource.ts 추가해주었다.
+
+> npm run db:create
+> 
+
+하면 데이터베이스 생성됨.
+
+> npm run start:dev
+> 
+
+하면 그 데이터베이스 안에 테이블 만들기
+
+하고나서 꼭 synchronize: false 로 바꾸기
+
+scripts 의 seed 실행(초기 데이터 넣어주기):
+
+src - database - seeds 폴더에 넣어주기.
+
+create-initial-data.ts 라는 파일을 생성해주었는데,(이름은 어떤것이라도 상관없음)
+
+workspacesRepository, channelsRepository 를 넣어주었다.
+
+회원가입하고 나면 workspace 화면으로 넘어가는데, 그러고 나서 이화면이 없다면 에러가 나기 때문에 초기 설정을 해주는것이다. workspace 하나와 거기에 속하는 하나의 channel을 넣어주었다.
+
+```tsx
+import {
+  Seeder,
+  // SeederFactoryManager
+} from 'typeorm-extension';
+import { DataSource } from 'typeorm';
+import { Workspaces } from '../../entities/Workspaces';
+import { Channels } from '../../entities/Channels';
+
+export default class UserSeeder implements Seeder {
+  public async run(
+    dataSource: DataSource,
+    // factoryManager: SeederFactoryManager,
+  ): Promise<any> {
+    const workspacesRepository = dataSource.getRepository(Workspaces);
+    await workspacesRepository.insert([
+      {
+        id: 1,
+        name: 'Sleact',
+        url: 'sleact',
+      },
+    ]);
+    const channelsRepository = dataSource.getRepository(Channels);
+    await channelsRepository.insert([
+      {
+        id: 1,
+        name: '일반',
+        WorkspaceId: 1,
+        private: false,
+      },
+    ]);
+  }
+
+```
+
+여기서 저 run 이 실행이되면 만들어뒀던 dataSource 파일이 실행되는거임.
+
+factoryManager는 랜덤한 대화, 랜덤한 채팅 만들어내고 싶다 그럴때 사용. 우선 주석처리
+
+package.json 에서 scripts 의 명령어인 "seed": "ts-node ./node_modules/typeorm-extension/bin/cli.cjs seed -d ./dataSource.ts",
+
+가 실행이 안됐다.
+
+"seed": "ts-node ./node_modules/typeorm-extension/bin/cli.cjs seed:run -d ./dataSource.ts",
+
+seed 뒤에 :run 추가해주니까 됐다.
+
+초기 데이터 생성완료 새로고침해주면,
+
+channels 와 workspaces 에 하나씩 데이터 들어간거 확인할 수 있다. 회원가입하는 모든 사용자들이 기본 채널과 워크스페이스에 하나씩 들어가있을 수 있다.
+
+- Migration:
+데이터를 변경할때 sql 문에서 바꿔줄수도있는데, 그러려면 코드도 바꿔줘야한다. entity 등. 그래서 혹시나 잘못 수정하면 불일치 문제가 발생할수있으니, migration 을 이용해 코드를 바꿔준다.
+
+추가해준 명령어 사용해주겠다.
+
+> npm run db:create-migration
+> 
+
+migration 파일 생성됨. 이것을 src 아래에  migrations 폴더를 생성해주고, 이름도 바꿔준다. 1708223778674-migrations.ts 였던거 1708223778674-categoryToType.ts 으로 바꿔주었다.
+
+dataSource.ts 안에서
+
+migrations: [__dirname + '/src/migrations/*.ts'],
+
+이 설정이 
+
+'/src/migrations/*.ts 경로의 파일들을 모두 마이그레이션 파일로 인식할거다라는 설정을 넣어준거임.
+
+```jsx
+import { MigrationInterface, QueryRunner } from 'typeorm';
+
+export class Migrations1708223778674 implements MigrationInterface {
+  public async up(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query(
+      'ALTER TABLE `mentions` RENAME COLUMN `category` TO `type`',
+    );
+  }
+
+  public async down(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query(
+      'ALTER TABLE `mentions` RENAME COLUMN `type` TO `category`',
+    );
+  }
+}
+```
+
+코드를 이렇게 바꿔주었다. 
+
+up 은 category 를 type으로 바꿔주겠다는 코드
+
+down 은 그것을 롤백하는 코드
+
+> npm run db:generate-migtation
+> 
+
+자동으로 마이그레이션 코드 만들어주는 기능인데, 여기에 drop 명령어같은거 있으면 삭제되니깐 주의하기. 자동으로 생성하고 나서도 잘 보고 수정해야한다.
+
+```json
+"db:migrate": "npm run typeorm migration:run -- -d ./dataSource.ts",
+"db:migrate:revert": "npm run typeorm migration:revert -- -d ./dataSource.ts", // 롤백하는 명령어
+"db:create-migration": "npm run typeorm migration:create -- ./src/migrations/",
+"db:generate-migration": "npm run typeorm migration:generate -- ./src/migrations -d ./dataSource.ts"
+```

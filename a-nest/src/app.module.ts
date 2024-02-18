@@ -31,7 +31,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
       username: process.env.DB_USERNAME,
       password: process.env.DB_PASSWORD,
       database: process.env.DB_DATABASE,
-      autoLoadEntities: true,
       entities: [
         ChannelChats,
         ChannelMembers,
@@ -45,7 +44,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
       keepConnectionAlive: true,
       migrations: [__dirname + '/migrations/*.ts'],
       charset: 'utf8mb4_general_ci',
-      synchronize: true,
+      synchronize: false,
       logging: true,
     }),
   ],

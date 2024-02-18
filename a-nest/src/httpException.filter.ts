@@ -27,6 +27,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
     }
 
     response.status(status).json({
+      // 내가 작성한 에러
       success: false,
       code: status,
       data: err.message,

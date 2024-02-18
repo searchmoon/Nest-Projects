@@ -4,7 +4,7 @@ import { JoinRequestDto } from './dto/join.request.dto';
 import { ApiTags } from '@nestjs/swagger';
 
 @ApiTags('Users')
-@Controller('users')
+@Controller('api/users')
 export class UsersController {
   constructor(private usersService: UsersService) {}
 
@@ -14,8 +14,9 @@ export class UsersController {
   }
 
   @Post()
-  postUsers(@Body() body: JoinRequestDto) {
-    return this.usersService.postUsers(body);
+  join(@Body() body: JoinRequestDto) {
+    this.usersService.join(body.email, body.nickname, body.password);
+    return undefined;
   }
 
   @Post('login')

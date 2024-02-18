@@ -14,9 +14,8 @@ export class UsersController {
   }
 
   @Post()
-  join(@Body() body: JoinRequestDto) {
-    this.usersService.join(body.email, body.nickname, body.password);
-    return undefined;
+  async join(@Body() body: JoinRequestDto) {
+    await this.usersService.join(body.email, body.nickname, body.password);
   }
 
   @Post('login')

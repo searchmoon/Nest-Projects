@@ -24,7 +24,7 @@ export class LocalSerializer extends PassportSerializer {
       .findOneOrFail({
         where: { id: +userId },
         select: ['id', 'email', 'nickname'],
-        relations: ['Workspaces'],
+        relations: ['Workspaces'], //사용자가 속해있는 workspace 가져오기
       })
       .then((user) => {
         console.log('user', user);

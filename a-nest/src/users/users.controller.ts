@@ -4,15 +4,17 @@ import {
   ForbiddenException,
   Get,
   Post,
+  Response,
   UseGuards,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { JoinRequestDto } from './dto/join.request.dto';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiCookieAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { LocalAuthGuard } from 'src/auth/local-auth.guard';
 import { NotLoggedInGuard } from 'src/auth/not-logged-in.guard';
 import { Users } from 'src/entities/Users';
 import { User } from 'src/common/decorators/user.decorator';
+import { LoggedInGuard } from 'src/auth/logged-in.guard';
 
 @ApiTags('Users')
 @Controller('api/users')
@@ -34,7 +36,7 @@ export class UsersController {
       data.nickname,
       data.password,
     );
-    if (result !== undefined && result !== null) {
+    if (result) {
       return 'ok';
     } else {
       throw new ForbiddenException();
@@ -48,6 +50,12 @@ export class UsersController {
     return user;
   }
 
-  @Get('logout')
-  logout() {}
+  @ApiCookieAuth('connect.sid')
+  @ApiOperation({ summary: '로그아웃' })
+  @UseGuards(LoggedInGuard)
+  @Post('logout')
+  async logout(@Response() res) {
+    res.clearCookie('connect.sid', { httpOnly: true });
+    return res.send('ok');
+  }
 }

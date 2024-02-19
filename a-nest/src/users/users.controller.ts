@@ -28,13 +28,13 @@ export class UsersController {
   @ApiOperation({ summary: '회원가입' })
   @UseGuards(NotLoggedInGuard)
   @Post()
-  async join(@Body() body: JoinRequestDto) {
+  async join(@Body() data: JoinRequestDto) {
     const result = await this.usersService.join(
-      body.email,
-      body.nickname,
-      body.password,
+      data.email,
+      data.nickname,
+      data.password,
     );
-    if (result) {
+    if (result !== undefined && result !== null) {
       return 'ok';
     } else {
       throw new ForbiddenException();

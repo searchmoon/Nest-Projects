@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { MoreThan, Repository } from 'typeorm';
 import { ChannelChats } from '../entities/ChannelChats';
@@ -126,6 +126,33 @@ export class ChannelsService {
       .take(perPage)
       .skip(perPage * (page - 1))
       .getMany();
+  }
+
+  async createWorkspaceChannelChats(
+    url: string,
+    name: string,
+    content: string,
+    myId: number,
+  ) {
+    const channel = await this.channelsRepository
+      .createQueryBuilder('channel')
+      .innerJoin('channel.Workspace', 'workspace', 'workspace.url = :url', {
+        url,
+      })
+      .where('channel.name = :name', { name })
+      .getOne();
+    if (!channel) {
+      throw new NotFoundException('채널이 존재하지 않습니다.');
+    }
+    const chats = new ChannelChats();
+    chats.content = content;
+    chats.UserId = myId;
+    chats.ChannelId = channel.id;
+    const savedChat = await this.channelChatsRepository.save(chats);
+    const chatWithUser = await this.channelChatsRepository.findOne({
+      where: { id: savedChat.id },
+      relations: ['User', 'Channel'],
+    });
   }
 
   async getChannelUnreadsCount(url, name, after) {

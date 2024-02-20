@@ -103,16 +103,16 @@ export class WorkspacesService {
       return null;
       // return new NotFoundException('사용자가 없습니다.');
     }
-    const workspaceMember = new WorkspaceMembers();
-    workspaceMember.WorkspaceId = workspace.id;
-    workspaceMember.UserId = user.id;
-    await this.workspaceMembersRepository.save(workspaceMember);
-    const channelMember = new ChannelMembers();
-    channelMember.ChannelId = workspace.Channels.find(
-      (v) => v.name === '일반',
-    ).id;
-    channelMember.UserId = user.id;
-    await this.channelMembersRepository.save(channelMember);
+
+    await this.workspaceMembersRepository.save({
+      WorkspaceId: workspace.id,
+      UserId: user.id,
+    });
+
+    await this.channelMembersRepository.save({
+      ChannelId: workspace.Channels.find((v) => v.name === '일반').id,
+      UserId: user.id,
+    });
   }
 
   async getWorkspaceMember(url: string, id: number) {

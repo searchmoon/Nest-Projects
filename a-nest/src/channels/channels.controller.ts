@@ -7,6 +7,8 @@ import {
   Param,
   Query,
   ParseIntPipe,
+  UseInterceptors,
+  UploadedFiles,
 } from '@nestjs/common';
 import { ApiCookieAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import fs from 'fs';
@@ -15,6 +17,9 @@ import { User } from '../common/decorators/user.decorator';
 import { Users } from '../entities/Users';
 import { CreateChannelDto } from './dto/create-channel.dto';
 import { ChannelsService } from './channels.service';
+import { FilesInterceptor } from '@nestjs/platform-express';
+import multer from 'multer';
+import path from 'path';
 
 try {
   fs.readdirSync('uploads');
@@ -91,6 +96,50 @@ export class ChannelsController {
     );
   }
 
+  @ApiOperation({ summary: '워크스페이스 특정 채널 채팅 생성하기' })
+  @Post(':url/channels/:name/chats')
+  async createWorkspaceChannelChats(
+    @Param('url') url,
+    @Param('name') name,
+    @Body('content') content,
+    @User() user: Users,
+  ) {
+    return this.channelsService.createWorkspaceChannelChats(
+      url,
+      name,
+      content,
+      user.id,
+    );
+  }
+  @ApiOperation({ summary: '워크스페이스 특정 채널 이미지 업로드하기' })
+  @UseInterceptors(
+    FilesInterceptor('image', 10, {
+      storage: multer.diskStorage({
+        destination(req, file, cb) {
+          cb(null, 'uploads/');
+        },
+        filename(req, file, cb) {
+          const ext = path.extname(file.originalname);
+          cb(null, path.basename(file.originalname, ext) + Date.now() + ext);
+        },
+      }),
+      limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+    }),
+  )
+  @Post(':url/channels/:name/images')
+  async createWorkspaceChannelImages(
+    @Param('url') url,
+    @Param('name') name,
+    @UploadedFiles() files: Express.Multer.File[],
+    @User() user: Users,
+  ) {
+    return this.channelsService.createWorkspaceChannelImages(
+      url,
+      name,
+      files,
+      user.id,
+    );
+  }
   @ApiOperation({ summary: '안 읽은 개수 가져오기' })
   @Get(':url/channels/:name/unreads')
   async getUnreads(

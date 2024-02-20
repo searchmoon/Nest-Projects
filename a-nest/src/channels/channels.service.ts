@@ -6,6 +6,7 @@ import { ChannelMembers } from '../entities/ChannelMembers';
 import { Channels } from '../entities/Channels';
 import { Users } from '../entities/Users';
 import { Workspaces } from '../entities/Workspaces';
+import { EventsGateway } from '../events/events.gateway';
 
 @Injectable()
 export class ChannelsService {
@@ -20,6 +21,7 @@ export class ChannelsService {
     private channelChatsRepository: Repository<ChannelChats>,
     @InjectRepository(Users)
     private usersRepository: Repository<Users>,
+    private readonly eventsGateway: EventsGateway,
   ) {}
 
   async findById(id: number) {
@@ -58,14 +60,16 @@ export class ChannelsService {
     const workspace = await this.workspacesRepository.findOne({
       where: { url },
     });
-    const channel = new Channels();
-    channel.name = name;
-    channel.WorkspaceId = workspace.id;
-    const channelReturned = await this.channelsRepository.save(channel);
-    const channelMember = new ChannelMembers();
-    channelMember.UserId = myId;
-    channelMember.ChannelId = channelReturned.id;
-    await this.channelMembersRepository.save(channelMember);
+
+    const channelReturned = await this.channelsRepository.save({
+      name,
+      WorkspaceId: workspace.id,
+    });
+
+    await this.channelMembersRepository.save({
+      UserId: myId,
+      ChannelId: channelReturned.id,
+    });
   }
 
   async getWorkspaceChannelMembers(url: string, name: string) {
@@ -88,9 +92,11 @@ export class ChannelsService {
       })
       .where('channel.name = :name', { name })
       .getOne();
+
     if (!channel) {
-      return null; // TODO: 이 때 어떻게 에러 발생?
+      return null;
     }
+
     const user = await this.usersRepository
       .createQueryBuilder('user')
       .where('user.email = :email', { email })
@@ -98,13 +104,15 @@ export class ChannelsService {
         url,
       })
       .getOne();
+
     if (!user) {
       return null;
     }
-    const channelMember = new ChannelMembers();
-    channelMember.ChannelId = channel.id;
-    channelMember.UserId = user.id;
-    await this.channelMembersRepository.save(channelMember);
+
+    await this.channelMembersRepository.save({
+      ChannelId: channel.id,
+      UserId: user.id,
+    });
   }
 
   async getWorkspaceChannelChats(
@@ -141,20 +149,65 @@ export class ChannelsService {
       })
       .where('channel.name = :name', { name })
       .getOne();
+
     if (!channel) {
       throw new NotFoundException('채널이 존재하지 않습니다.');
     }
-    const chats = new ChannelChats();
-    chats.content = content;
-    chats.UserId = myId;
-    chats.ChannelId = channel.id;
-    const savedChat = await this.channelChatsRepository.save(chats);
+
+    const savedChat = await this.channelChatsRepository.save({
+      content,
+      UserId: myId,
+      ChannelId: channel.id,
+    });
+
     const chatWithUser = await this.channelChatsRepository.findOne({
       where: { id: savedChat.id },
       relations: ['User', 'Channel'],
     });
+
+    this.eventsGateway.server
+      .to(`/ws-${url}-${chatWithUser.ChannelId}`)
+      .emit('message', chatWithUser);
   }
 
+  async createWorkspaceChannelImages(
+    url: string,
+    name: string,
+    files: Express.Multer.File[],
+    myId: number,
+  ) {
+    console.log(files);
+
+    const channel = await this.channelsRepository
+      .createQueryBuilder('channel')
+      .innerJoin('channel.Workspace', 'workspace', 'workspace.url = :url', {
+        url,
+      })
+      .where('channel.name = :name', { name })
+      .getOne();
+
+    if (!channel) {
+      throw new NotFoundException('채널이 존재하지 않습니다.');
+    }
+
+    for (let i = 0; i < files.length; i++) {
+      const savedChat = await this.channelChatsRepository.save({
+        content: files[i].path,
+        UserID: myId,
+        ChannelId: channel.id,
+      });
+
+      const chatWithUser = await this.channelChatsRepository.findOne({
+        where: { id: savedChat.id },
+        relations: ['User', 'Channel'],
+      });
+
+      this.eventsGateway.server
+        // .of(`/ws-${url}`)
+        .to(`/ws-${url}-${chatWithUser.ChannelId}`)
+        .emit('message', chatWithUser);
+    }
+  }
   async getChannelUnreadsCount(url, name, after) {
     const channel = await this.channelsRepository
       .createQueryBuilder('channel')

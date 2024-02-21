@@ -7,6 +7,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { LoggerMiddleware } from './middlewares/logger.middleware';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Users } from './entities/Users';
+import { Rooms } from './entities/Rooms';
+import { PassportModule } from '@nestjs/passport';
 
 @Module({
   imports: [
@@ -19,11 +21,11 @@ import { Users } from './entities/Users';
       password: process.env.DB_PASSWORD,
       database: process.env.DB_DATABASE,
       // autoLoadEntities: true,
-      entities: [Users],
+      entities: [Users, Rooms],
       keepConnectionAlive: true,
       migrations: [__dirname + '/migrations/*.ts'],
       charset: 'utf8mb4_general_ci',
-      synchronize: true,
+      synchronize: true, //데이터 베이스 만들고 나서 꼭 false로 바꿔주기! 개발용
       logging: true,
     }),
     UsersModule,

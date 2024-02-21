@@ -9,11 +9,13 @@ import { Users } from 'src/entities/Users';
 import { Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import * as bcrypt from 'bcryptjs';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(Users) private usersRepository: Repository<Users>,
+    private jwtService: JwtService,
   ) {}
 
   async join(userInfo: CreateUserDto) {
@@ -39,13 +41,16 @@ export class UsersService {
     }
   }
 
-  async login(userInfo: CreateUserDto): Promise<string> {
+  async login(userInfo: CreateUserDto): Promise<{ accessToken: string }> {
     const { email, password } = userInfo;
     const user = await this.usersRepository.findOne({
       where: { email },
     });
     if (user && (await bcrypt.compare(password, user.password))) {
-      return 'login success';
+      const payload = { email };
+      const accessToken = await this.jwtService.sign(payload);
+
+      return { accessToken };
     } else {
       throw new UnauthorizedException('login failed');
     }

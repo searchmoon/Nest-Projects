@@ -34,7 +34,7 @@ export class UsersService {
       await this.usersRepository.save(user);
     } catch (error) {
       if (error.code === '23505') {
-        throw new ConflictException('Existing username');
+        throw new ConflictException('Existing email');
       } else {
         throw new InternalServerErrorException();
       }

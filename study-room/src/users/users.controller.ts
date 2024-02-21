@@ -1,4 +1,14 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Req,
+  Request,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { AuthGuard } from '@nestjs/passport';
@@ -8,7 +18,7 @@ export class UsersController {
   constructor(private usersService: UsersService) {}
 
   @Post('join')
-  join(@Body() userInfo: CreateUserDto) {
+  join(@Body() userInfo: CreateUserDto): Promise<void> {
     return this.usersService.join(userInfo);
   }
 
@@ -19,8 +29,14 @@ export class UsersController {
   }
 
   @Post('login')
-  login(@Body() userInfo: CreateUserDto) {
+  login(@Body() userInfo: CreateUserDto): Promise<{ accessToken: string }> {
     return this.usersService.login(userInfo);
+  }
+
+  @Get('test')
+  // @UseGuards(AuthGuard())
+  test(@Req() req) {
+    console.log('user', req.headers.authorization);
   }
 
   // @Get('logout')

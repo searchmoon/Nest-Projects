@@ -8,7 +8,6 @@ import { LoggerMiddleware } from './middlewares/logger.middleware';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Users } from './entities/Users';
 import { Rooms } from './entities/Rooms';
-import { PassportModule } from '@nestjs/passport';
 
 @Module({
   imports: [

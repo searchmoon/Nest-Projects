@@ -1,7 +1,8 @@
 import { IsEmail, IsString } from 'class-validator';
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn, Unique } from 'typeorm';
 
 @Entity()
+// @Unique(['email'])
 export class Users {
   @PrimaryGeneratedColumn()
   id: number;
